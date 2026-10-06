@@ -23,7 +23,7 @@ export function Photo({
   const [failed, setFailed] = useState(false);
   return (
     <div
-      className={`relative overflow-hidden bg-gradient-to-br from-[#e9c9a0] to-[#b9773f] ${className}`}
+      className={`${className.includes("absolute") ? "" : "relative"} overflow-hidden bg-gradient-to-br from-[#e9c9a0] to-[#b9773f] ${className}`}
     >
       {!failed && (
         <Image
