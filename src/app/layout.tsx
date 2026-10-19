@@ -4,6 +4,9 @@ import { type Metadata } from "next";
 import { DM_Serif_Display, Inter } from "next/font/google";
 import { Navbar } from "~/components/Navbar";
 import { Footer } from "~/components/Footer";
+import { CartProvider } from "~/components/cart/CartProvider";
+import { CartDrawer } from "~/components/cart/CartDrawer";
+import { getCartCatalogue } from "~/lib/products.data";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://mittimadhur.in"),
@@ -14,7 +17,6 @@ export const metadata: Metadata = {
   },
   description:
     "Naturally sweet, chemical-free jaggery sourced from trusted Indian farmers and delivered across India.",
-  icons: [{ rel: "icon", url: "/favicon.ico" }],
   openGraph: {
     type: "website",
     siteName: "MittiMadhur",
@@ -29,9 +31,15 @@ const dmSerif = DM_Serif_Display({
   variable: "--font-dm-serif",
 });
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  // Built on the server and serialised into every page, so the cart can price
+  // itself from server data rather than from whatever is in localStorage.
+  // It is a deliberately minimal projection (no raw stock counts) because it
+  // IS public on every route - see getCartCatalogue.
+  const cartCatalogue = await getCartCatalogue();
+
   return (
     <html lang="en" className={`${inter.variable} ${dmSerif.variable}`}>
       <body className="flex min-h-dvh flex-col font-sans antialiased">
@@ -41,11 +49,14 @@ export default function RootLayout({
         >
           Skip to content
         </a>
-        <Navbar />
-        <main id="main" className="flex-1">
-          {children}
-        </main>
-        <Footer />
+        <CartProvider catalogue={cartCatalogue}>
+          <Navbar />
+          <main id="main" className="flex-1">
+            {children}
+          </main>
+          <Footer />
+          <CartDrawer />
+        </CartProvider>
       </body>
     </html>
   );

@@ -7,6 +7,7 @@ import {
   isInStock,
   type Product,
 } from "~/lib/products";
+import { AddToCartButton } from "./cart/AddToCartButton";
 import { Photo } from "./Photo";
 import { Stars } from "./Stars";
 
@@ -15,8 +16,9 @@ import { Stars } from "./Stars";
  * "related products", so those four never drift apart visually.
  *
  * The whole card is clickable via a stretched link on the title; the CTA sits
- * above it with `relative z-10`. Until the cart ships, the CTA navigates to the
- * product page, where a size has to be picked anyway.
+ * above it with `relative z-10`. A single-variant product adds to the cart
+ * straight from the card; a multi-variant one links to the product page, where
+ * a size has to be picked anyway.
  */
 export function ProductCard({
   product,
@@ -102,14 +104,27 @@ export function ProductCard({
       {/* mt-auto keeps the CTAs aligned across cards of differing title length */}
       <div className="mt-auto pt-3">
         {available ? (
-          <Link
-            href={href}
-            className="bg-brown hover:bg-brown-dark focus-visible:ring-brown relative z-10 flex w-full items-center justify-center gap-2 rounded-full py-2 text-xs font-semibold text-white focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
-          >
-            <ShoppingCart className="size-3.5" aria-hidden />
-            {/* TODO(step 2): single-variant cards add to the cart directly once the cart store exists. */}
-            {multipleSizes ? "Choose Size" : "View Product"}
-          </Link>
+          multipleSizes ? (
+            // A size genuinely has to be chosen, so the CTA still navigates.
+            <Link
+              href={href}
+              className="bg-brown hover:bg-brown-dark focus-visible:ring-brown relative z-10 flex w-full items-center justify-center gap-2 rounded-full py-2 text-xs font-semibold text-white focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+            >
+              <ShoppingCart className="size-3.5" aria-hidden />
+              Choose Size
+            </Link>
+          ) : (
+            // One variant, nothing to choose: add straight from the card. This
+            // card stays a server component — AddToCartButton is the client
+            // boundary, which is exactly where it belongs.
+            <AddToCartButton
+              sku={variant.sku}
+              productName={product.name}
+              variantLabel={variant.label}
+              size="sm"
+              fullWidth
+            />
+          )
         ) : (
           <span className="border-line text-muted flex w-full items-center justify-center gap-2 rounded-full border py-2 text-xs font-semibold">
             Out of Stock

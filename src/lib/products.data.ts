@@ -17,6 +17,7 @@ import {
   type NutritionRow,
   type Product,
 } from "./products";
+import { MAX_PER_LINE, type CartCatalogue } from "./cart";
 
 export const categories: Category[] = [
   {
@@ -879,4 +880,46 @@ export async function getMaxProductPriceInPaise(): Promise<number> {
     (max, p) => Math.max(max, defaultVariant(p).priceInPaise),
     0,
   );
+}
+
+/**
+ * Flat SKU -> display/price map for the cart.
+ *
+ * This IS serialised to the browser on every route (the provider lives in the
+ * root layout), so it carries the minimum the cart needs: no raw stock counts,
+ * no internal fields. Keep it that way — anything added here is published.
+ *
+ * Freshness: every route is prerendered, so these values are fixed at BUILD
+ * time, not per request. A price or stock change reaches customers on the next
+ * build/deploy. Once this is database-backed it needs `revalidate` or cache
+ * tags, and checkout must re-read price and stock server-side regardless —
+ * see docs/CHECKOUT-SECURITY.md.
+ */
+export async function getCartCatalogue(): Promise<CartCatalogue> {
+  // Accumulated in a Map and converted with Object.fromEntries rather than
+  // assigned into an object literal.
+  //
+  // `obj[sku] = v` with a SKU of "__proto__" reassigns the prototype, and
+  // "constructor"/"toString" shadow those members for every later consumer.
+  // Object.fromEntries defines OWN properties, so neither can happen. (A
+  // null-prototype object would also be safe but cannot cross the RSC
+  // boundary — React rejects it outright, which is how this was caught.)
+  // The read side is guarded independently by `lookupSku` in ./cart.
+  const entries = new Map<string, CartCatalogue[string]>();
+  for (const product of products) {
+    for (const variant of product.variants) {
+      entries.set(variant.sku, {
+        sku: variant.sku,
+        productSlug: product.slug,
+        productName: product.name,
+        variantLabel: variant.label,
+        image: product.images[0],
+        priceInPaise: variant.priceInPaise,
+        mrpInPaise: variant.mrpInPaise,
+        // NOT the raw stock figure — see the note on CartSku.maxPerLine.
+        maxPerLine: Math.max(0, Math.min(variant.stock, MAX_PER_LINE)),
+      });
+    }
+  }
+  return Object.fromEntries(entries);
 }

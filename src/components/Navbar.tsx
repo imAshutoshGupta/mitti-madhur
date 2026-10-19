@@ -4,12 +4,23 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Leaf, Menu, Search, ShoppingCart, User, X } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useCart } from "~/components/cart/CartProvider";
 import { navLinks } from "~/lib/content";
 
 export function Navbar() {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
+  const { totals, hydrated } = useCart();
+
+  // Before hydration the stored cart has not been read, so the count is 0 on
+  // both sides. Deriving the label from the same gate as the badge keeps the
+  // accessible name from differing between the server and client trees.
+  const itemCount = hydrated ? totals.itemCount : 0;
+  const cartLabel =
+    itemCount === 0
+      ? "Cart, empty"
+      : `Cart, ${itemCount} ${itemCount === 1 ? "item" : "items"}`;
 
   // Close the mobile menu on navigation, otherwise it stays open over the new
   // page. Deliberately keyed on pathname only: reading useSearchParams here
@@ -109,16 +120,24 @@ export function Navbar() {
             <User className="size-5" />
           </button>
 
-          {/* TODO(step 2): link to /cart and show the live item count.
-              Disabled until the cart ships; see the note on Account above. */}
-          <button
-            type="button"
-            disabled
-            aria-label="Cart (coming soon)"
-            className="text-ink hover:text-brown relative grid size-10 place-items-center"
+          <Link
+            href="/cart"
+            aria-label={cartLabel}
+            className="text-ink hover:text-brown focus-visible:ring-brown relative grid size-10 place-items-center rounded-full focus-visible:ring-2 focus-visible:outline-none"
           >
             <ShoppingCart className="size-5" />
-          </button>
+            {/* The count is read from localStorage after mount, so the server
+                renders no badge at all. Gating on `hydrated` keeps the two
+                trees identical and avoids a flash of "0". */}
+            {hydrated && itemCount > 0 && (
+              <span
+                aria-hidden
+                className="bg-accent absolute top-1 right-0.5 grid size-4 place-items-center rounded-full text-[10px] font-bold text-white"
+              >
+                {itemCount > 9 ? "9+" : itemCount}
+              </span>
+            )}
+          </Link>
 
           <button
             type="button"

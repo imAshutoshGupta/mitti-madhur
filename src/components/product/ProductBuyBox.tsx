@@ -1,13 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Check, Minus, Plus, ShoppingCart } from "lucide-react";
+import { Check, Minus, Plus } from "lucide-react";
+import { AddToCartButton } from "~/components/cart/AddToCartButton";
+import { useCart, useCartQuantity } from "~/components/cart/CartProvider";
+import { MAX_PER_LINE } from "~/lib/cart";
 import { Stars } from "~/components/Stars";
 import { formatPrice } from "~/lib/format";
 import { defaultVariant, discountPercent, type Product } from "~/lib/products";
-
-/** Hard cap per line regardless of how deep the stock is. */
-const MAX_PER_ORDER = 10;
 
 export function ProductBuyBox({ product }: { product: Product }) {
   const [sku, setSku] = useState(() => defaultVariant(product).sku);
@@ -23,8 +23,28 @@ export function ProductBuyBox({ product }: { product: Product }) {
   }, [sku]);
 
   const soldOut = selected.stock === 0;
+  const { hydrated } = useCart();
+  const inCart = useCartQuantity(selected.sku);
   const discount = discountPercent(selected);
-  const maxQuantity = Math.max(1, Math.min(selected.stock, MAX_PER_ORDER));
+  // The picker must offer the REMAINING headroom, not the whole line cap.
+  // Previously it ignored what was already in the cart, so a customer with 6
+  // in the cart could pick 10, and the reducer silently capped the result at
+  // 10 — six of the units they explicitly chose vanished while the button
+  // still said "Added".
+  //
+  // Gated on `hydrated`: `inCart` is 0 until storage is read, so using it
+  // before then would make the server and first-client renders disagree.
+  const lineCap = Math.max(0, Math.min(selected.stock, MAX_PER_LINE));
+  const headroom = hydrated ? Math.max(0, lineCap - inCart) : lineCap;
+  const atCapacity = hydrated && !soldOut && headroom === 0;
+  const maxQuantity = Math.max(1, headroom);
+
+  // Headroom can shrink underneath the picker — another tab adds the same SKU,
+  // or the drawer's stepper is used. Never leave a number selected that cannot
+  // actually be added.
+  useEffect(() => {
+    setQuantity((q) => Math.min(q, Math.max(1, headroom)));
+  }, [headroom]);
 
   return (
     <div>
@@ -138,7 +158,7 @@ export function ProductBuyBox({ product }: { product: Product }) {
             <button
               type="button"
               aria-label="Decrease quantity"
-              disabled={soldOut || quantity <= 1}
+              disabled={soldOut || atCapacity || quantity <= 1}
               onClick={() => {
                 setQuantity((q) => Math.max(1, q - 1));
               }}
@@ -156,7 +176,7 @@ export function ProductBuyBox({ product }: { product: Product }) {
             <button
               type="button"
               aria-label="Increase quantity"
-              disabled={soldOut || quantity >= maxQuantity}
+              disabled={soldOut || atCapacity || quantity >= maxQuantity}
               onClick={() => {
                 setQuantity((q) => Math.min(maxQuantity, q + 1));
               }}
@@ -167,22 +187,23 @@ export function ProductBuyBox({ product }: { product: Product }) {
           </div>
         </div>
 
-        {/* TODO(step 2): wire to the cart store and enable. */}
-        <button
-          type="button"
-          disabled
-          aria-describedby="cart-pending-note"
-          className="bg-line text-muted mt-5 flex min-h-12 w-full cursor-not-allowed items-center justify-center gap-2 rounded-full px-6 text-sm font-semibold"
-        >
-          <ShoppingCart className="size-4" aria-hidden />
-          {soldOut ? "Out of Stock" : "Add to Cart"}
-        </button>
-        <p
-          id="cart-pending-note"
-          className="text-muted mt-2 text-center text-xs"
-        >
-          Cart and checkout are arriving in the next update.
-        </p>
+        <div className="mt-5">
+          {atCapacity && (
+            <p className="text-accent mt-4 text-sm font-medium">
+              You already have the maximum of this size in your cart.
+            </p>
+          )}
+
+          <AddToCartButton
+            sku={selected.sku}
+            productName={product.name}
+            variantLabel={selected.label}
+            quantity={quantity}
+            disabled={soldOut || atCapacity}
+            size="md"
+            fullWidth
+          />
+        </div>
       </div>
 
       <p className="text-muted mt-4 text-xs">SKU: {selected.sku}</p>
