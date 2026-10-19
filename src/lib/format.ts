@@ -90,3 +90,56 @@ export function toJsonLd(data: unknown): string {
     .replace(/\u2028/g, "\\u2028")
     .replace(/\u2029/g, "\\u2029");
 }
+
+// ---------------------------------------------------------------------------
+// Dates
+// ---------------------------------------------------------------------------
+
+const MONTHS = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+];
+
+/** IST is UTC+5:30 and has no DST, so this is a true constant. */
+const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000;
+
+/**
+ * "2026-10-20" or "2026-10-20T19:05:00.000Z" -> "20 October 2026".
+ *
+ * Hand-rolled rather than `toLocaleDateString` for the same reason as
+ * `formatPrice`: Intl locale data can differ between Node and a browser, and a
+ * mismatch mid-render is a hydration error.
+ *
+ * A full timestamp is shifted into IST first. Orders are stored as UTC, so one
+ * placed at 00:30 IST would otherwise display as the previous day to every
+ * Indian customer looking at it.
+ *
+ * Returns null for anything unparseable, so callers decide the fallback rather
+ * than rendering "Invalid Date".
+ */
+export function formatIndianDate(iso: string): string | null {
+  // A date-only string has no timezone, so read it literally; shifting it
+  // would move it a day.
+  const dateOnly = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
+  if (dateOnly) {
+    const [, year, month, day] = dateOnly;
+    const name = MONTHS[Number(month) - 1];
+    return name ? `${Number(day)} ${name} ${year}` : null;
+  }
+
+  const ms = Date.parse(iso);
+  if (Number.isNaN(ms)) return null;
+  const ist = new Date(ms + IST_OFFSET_MS);
+  const name = MONTHS[ist.getUTCMonth()];
+  return name ? `${ist.getUTCDate()} ${name} ${ist.getUTCFullYear()}` : null;
+}

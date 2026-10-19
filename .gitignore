@@ -44,3 +44,5 @@ yarn-error.log*
 
 # idea files
 .idea
+# local dev order store (replaced by a database at step 5)
+.data

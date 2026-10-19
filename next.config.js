@@ -29,15 +29,46 @@ import "./src/env.js";
  *   upgrade-insecure-requests
  * A payment gateway will need its domains added to script-src/connect-src/frame-src.
  */
+const isProd = process.env.NODE_ENV === "production";
+
+/**
+ * Content-Security-Policy.
+ *
+ * `script-src` still carries 'unsafe-inline' because Next emits inline
+ * bootstrap scripts and removing that needs a per-request nonce from
+ * middleware, which forces matched routes into dynamic rendering. That work is
+ * still outstanding and is tracked below.
+ *
+ * But 'unsafe-inline' on script-src is NOT a reason to omit the rest, and the
+ * rest is what limits the blast radius of an injection:
+ *   - script-src 'self'  blocks loading an attacker's external script file.
+ *   - connect-src 'self' blocks exfiltration. This is the important one now
+ *     that /checkout holds a name, phone, email and postal address in memory:
+ *     without it, injected code can fetch() the lot to any host. Note the
+ *     checkout submit is a server action dispatched as fetch(), so it is
+ *     governed by connect-src — `form-action` does not apply to it at all.
+ *   - frame-ancestors / base-uri / object-src / form-action as before.
+ *
+ * TODO: add `script-src 'nonce-{N}' 'strict-dynamic'` via middleware and drop
+ * 'unsafe-inline'. Scope the matcher so the prerendered catalogue routes keep
+ * their static cache.
+ */
 const contentSecurityPolicy = [
-  // Blocks an injected <base> from repointing every relative URL on the page.
+  "default-src 'self'",
+  // 'unsafe-eval' is required by React Refresh in development only.
+  `script-src 'self' 'unsafe-inline'${isProd ? "" : " 'unsafe-eval'"}`,
+  // Tailwind and Next inject styles inline; unavoidable without a style nonce.
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' data: blob:",
+  // next/font self-hosts at build time, so no external font origin is needed.
+  "font-src 'self'",
+  // ws: is the dev HMR socket.
+  `connect-src 'self'${isProd ? "" : " ws: wss:"}`,
   "base-uri 'self'",
-  // Kills <object>/<embed> plugin vectors outright.
   "object-src 'none'",
-  // Stops an injected form POSTing customer or card details to another origin.
   "form-action 'self'",
-  // Modern replacement for X-Frame-Options, which is kept below for old browsers.
   "frame-ancestors 'none'",
+  ...(isProd ? ["upgrade-insecure-requests"] : []),
 ].join("; ");
 
 const securityHeaders = [

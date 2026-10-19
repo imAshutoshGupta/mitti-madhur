@@ -20,8 +20,14 @@ function InstagramIcon({ className }: { className?: string }) {
   );
 }
 
-// Only link to routes that exist. Policy pages (shipping, returns, privacy,
-// terms) arrive with checkout — linking to them now would just mean 404s.
+// Only link to routes that exist.
+const policies = [
+  { label: "Shipping Policy", href: "/shipping-policy" },
+  { label: "Returns & Refunds", href: "/returns-policy" },
+  { label: "Privacy Policy", href: "/privacy-policy" },
+  { label: "Terms of Service", href: "/terms" },
+];
+
 const company = [
   { label: "Our Story", href: "/#story" },
   { label: "Why Jaggery", href: "/#benefits" },
@@ -129,16 +135,19 @@ export function Footer() {
         </div>
 
         <div className="border-t border-white/10">
-          {/* No year on purpose. This footer is in the root layout, and `/`
-              plus every product page is prerendered at build time, so
-              `new Date().getFullYear()` freezes to the build year and a build
-              shipped in December would still read "2026" all through January.
-              Computing it on the client needs a "use client" module, and this
-              file cannot be one (it imports the server-only catalogue) nor may
-              a second file be added here — and a yearless notice is equally
-              valid, so the year is simply dropped. */}
-          <div className="mx-auto max-w-7xl px-4 py-5 text-xs sm:px-6">
-            © MittiMadhur. All rights reserved.
+          <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-5 text-xs sm:px-6 md:flex-row md:items-center md:justify-between">
+            <p>© MittiMadhur. All rights reserved.</p>
+            <nav aria-label="Policies">
+              <ul className="flex flex-wrap gap-x-5 gap-y-2">
+                {policies.map((l) => (
+                  <li key={l.href}>
+                    <Link href={l.href} className="hover:text-white">
+                      {l.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </nav>
           </div>
         </div>
       </div>

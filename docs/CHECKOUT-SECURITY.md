@@ -19,11 +19,17 @@ quantity that exceeds real stock, at a price that is no longer the price.
 
 ## The rule
 
-The client sends `[{ sku, quantity }]` and **nothing else**. Never a price,
-never a line total, never a subtotal. If a price or total appears in a request
-body, discard it before parsing — do not "validate" it against the server
-figure, because that turns a silent correction into an oracle an attacker can
-probe.
+The client sends `[{ sku, quantity }]` and **nothing else** that affects what
+is charged. Never a price, never a line total. The server computes every rupee.
+
+**One narrow exception, already implemented:** the client may send
+`expectedTotalInPaise` — the figure that was on the button the customer
+pressed. The server compares it to its own total and **rejects the order on a
+mismatch** so the customer re-reviews. It is never used to price anything and
+never silently corrected. That distinction is the whole point: comparing and
+rejecting is safe, and it catches a customer being charged a different amount
+from the one they agreed to. Silently substituting the client's figure, or
+adjusting toward it, is the thing that must never happen.
 
 ## Order of checks when creating an order
 
