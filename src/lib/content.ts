@@ -1,73 +1,12 @@
-// All page copy and data lives here, so you can edit text without touching layout.
-// Put matching images in /public/images.
+// Marketing copy for the homepage. Product and category data now lives in
+// ~/lib/products.ts, because it is shop data rather than page copy.
 
 export const navLinks = [
-  { label: "Shop", href: "#shop" },
-  { label: "Our Story", href: "#story" },
-  { label: "Benefits", href: "#benefits" },
-  { label: "Recipes", href: "#recipes" },
-  { label: "Contact", href: "#contact" },
-];
-
-export const categories = [
-  {
-    name: "Jaggery Blocks",
-    note: "Traditional & Pure",
-    image: "/images/cat-blocks.jpg",
-  },
-  {
-    name: "Jaggery Powder",
-    note: "Easy to use",
-    image: "/images/cat-powder.jpg",
-  },
-  {
-    name: "Jaggery Granules",
-    note: "Quick dissolving",
-    image: "/images/cat-granules.jpg",
-  },
-  {
-    name: "Liquid Jaggery",
-    note: "Natural sweetener",
-    image: "/images/cat-liquid.jpg",
-  },
-  {
-    name: "Flavoured Jaggery",
-    note: "Unique & healthy",
-    image: "/images/cat-flavoured.jpg",
-  },
-];
-
-export const products = [
-  {
-    name: "Organic Jaggery Block",
-    size: "500 g",
-    price: 120,
-    image: "/images/prod-block.png",
-  },
-  {
-    name: "Jaggery Powder",
-    size: "500 g",
-    price: 110,
-    image: "/images/prod-powder.png",
-  },
-  {
-    name: "Jaggery Granules",
-    size: "500 g",
-    price: 115,
-    image: "/images/prod-granules.png",
-  },
-  {
-    name: "Liquid Jaggery",
-    size: "500 ml",
-    price: 180,
-    image: "/images/prod-liquid.png",
-  },
-  {
-    name: "Immunity Jaggery Mix",
-    size: "300 g",
-    price: 160,
-    image: "/images/prod-immunity.png",
-  },
+  { label: "Shop", href: "/shop" },
+  { label: "Our Story", href: "/#story" },
+  { label: "Benefits", href: "/#benefits" },
+  { label: "Recipes", href: "/#recipes" },
+  { label: "Contact", href: "/#contact" },
 ];
 
 export const recipes = [

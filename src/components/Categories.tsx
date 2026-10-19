@@ -1,22 +1,27 @@
+import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import { categories } from "~/lib/content";
+import { getAllCategories } from "~/lib/products.data";
+import { shopHref } from "~/lib/shop-url";
 import { Reveal } from "./Reveal";
 import { Photo } from "./Photo";
 import { SectionHeading } from "./SectionHeading";
 
-export function Categories() {
+export async function Categories() {
+  const categories = await getAllCategories();
+
   return (
     <section id="shop" className="mx-auto max-w-7xl px-4 py-12 sm:px-6">
       <SectionHeading
         eyebrow="Shop by category"
         title="Explore Our Jaggery Range"
         linkLabel="View All"
+        href="/shop"
       />
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
         {categories.map((c, i) => (
-          <Reveal key={c.name} delay={i * 0.08}>
-            <a
-              href="#"
+          <Reveal key={c.slug} delay={i * 0.08}>
+            <Link
+              href={shopHref({ category: c.slug })}
               className="group border-line bg-card hover:border-brown/40 block overflow-hidden rounded-xl border transition duration-300 hover:-translate-y-1 hover:shadow-md"
             >
               <Photo
@@ -34,7 +39,7 @@ export function Categories() {
                   <ArrowRight className="size-3.5" aria-hidden />
                 </span>
               </div>
-            </a>
+            </Link>
           </Reveal>
         ))}
       </div>

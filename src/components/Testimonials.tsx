@@ -16,7 +16,7 @@ export function Testimonials() {
     setStart((s) => (s + dir + reviews.length) % reviews.length);
 
   return (
-    <section className="mx-auto max-w-7xl px-4 pb-16 sm:px-6">
+    <section id="reviews" className="mx-auto max-w-7xl px-4 pb-16 sm:px-6">
       <div className="mb-6 flex items-end justify-between">
         <div>
           <p className="text-accent text-xs font-semibold tracking-[0.18em] uppercase">
@@ -30,14 +30,14 @@ export function Testimonials() {
           <button
             onClick={() => move(-1)}
             aria-label="Previous review"
-            className="hover:bg-cream grid size-10 place-items-center rounded-full bg-white shadow-sm md:size-8"
+            className="hover:bg-cream grid size-10 place-items-center rounded-full bg-white shadow-sm"
           >
             <ChevronLeft className="size-4" />
           </button>
           <button
             onClick={() => move(1)}
             aria-label="Next review"
-            className="hover:bg-cream grid size-10 place-items-center rounded-full bg-white shadow-sm md:size-8"
+            className="hover:bg-cream grid size-10 place-items-center rounded-full bg-white shadow-sm"
           >
             <ChevronRight className="size-4" />
           </button>
