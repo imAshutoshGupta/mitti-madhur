@@ -62,14 +62,6 @@ export type Product = {
 // Variant selection
 // ---------------------------------------------------------------------------
 
-/** Cheapest variant overall, ignoring stock. Rarely what you want — see below. */
-export function cheapestVariant(product: Product): ProductVariant {
-  return product.variants.reduce(
-    (lowest, v) => (v.priceInPaise < lowest.priceInPaise ? v : lowest),
-    product.variants[0],
-  );
-}
-
 /**
  * THE variant a product is represented by: the cheapest one a customer can
  * actually buy, falling back to the cheapest overall when everything is sold out.
@@ -83,11 +75,10 @@ export function cheapestVariant(product: Product): ProductVariant {
  */
 export function defaultVariant(product: Product): ProductVariant {
   const inStock = product.variants.filter((v) => v.stock > 0);
-  const first = inStock[0];
-  if (!first) return cheapestVariant(product);
-  return inStock.reduce(
-    (lowest, v) => (v.priceInPaise < lowest.priceInPaise ? v : lowest),
-    first,
+  // `variants` is a non-empty tuple, so `candidates` is never empty.
+  const candidates = inStock.length > 0 ? inStock : product.variants;
+  return candidates.reduce((lowest, v) =>
+    v.priceInPaise < lowest.priceInPaise ? v : lowest,
   );
 }
 
@@ -100,13 +91,6 @@ export function discountPercent(variant: ProductVariant): number {
   return Math.round(
     ((variant.mrpInPaise - variant.priceInPaise) / variant.mrpInPaise) * 100,
   );
-}
-
-export function findVariant(
-  product: Product,
-  sku: string,
-): ProductVariant | undefined {
-  return product.variants.find((v) => v.sku === sku);
 }
 
 // ---------------------------------------------------------------------------

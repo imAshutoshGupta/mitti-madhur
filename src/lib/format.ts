@@ -48,10 +48,6 @@ export function paiseToRupees(paise: number): number {
   return paise / 100;
 }
 
-export function rupeesToPaise(rupees: number): number {
-  return Math.round(rupees * 100);
-}
-
 /** "4.8" — one decimal place, no trailing ".0" surprises. */
 export function formatRating(rating: number): string {
   return rating.toFixed(1);

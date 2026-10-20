@@ -120,8 +120,6 @@ export const checkoutCartSchema = z
   .min(1, "Your cart is empty")
   .max(50, "That is too many different items for one order");
 
-export type CheckoutCartLine = z.infer<typeof checkoutCartSchema>[number];
-
 /** Field-keyed errors the form can render inline. */
 export type CheckoutFieldErrors = Partial<
   Record<keyof ShippingAddress | "cart" | "form", string>

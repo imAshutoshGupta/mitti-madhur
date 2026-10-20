@@ -4,31 +4,6 @@
  */
 import "./src/env.js";
 
-/**
- * Baseline response headers.
- *
- * On the Content-Security-Policy below: `script-src` is deliberately absent.
- * Next emits inline bootstrap scripts (`self.__next_f.push([...])`), so locking
- * script sources down requires a per-request nonce minted in middleware — and
- * that forces every matched route into DYNAMIC rendering, which would destroy
- * the full-page static caching the catalogue depends on. That trade is worth
- * making when the first genuinely dynamic route lands (cart/checkout), with
- * middleware's `matcher` scoped to exclude the static catalogue routes.
- *
- * The four directives that ARE set need no nonce, cost nothing and break
- * nothing, so there is no reason to withhold them in the meantime.
- *
- * Target policy once nonces exist:
- *   default-src 'self';
- *   script-src 'self' 'nonce-{NONCE}' 'strict-dynamic';
- *   style-src 'self' 'unsafe-inline';      // unavoidable with Tailwind/Next
- *   img-src 'self' data: blob:;
- *   font-src 'self';                       // next/font self-hosts at build time
- *   connect-src 'self';
- *   base-uri 'self'; object-src 'none'; form-action 'self'; frame-ancestors 'none';
- *   upgrade-insecure-requests
- * A payment gateway will need its domains added to script-src/connect-src/frame-src.
- */
 const isProd = process.env.NODE_ENV === "production";
 
 /**
@@ -52,6 +27,9 @@ const isProd = process.env.NODE_ENV === "production";
  * TODO: add `script-src 'nonce-{N}' 'strict-dynamic'` via middleware and drop
  * 'unsafe-inline'. Scope the matcher so the prerendered catalogue routes keep
  * their static cache.
+ *
+ * A payment gateway will need its domains added to script-src, connect-src
+ * and frame-src.
  */
 const contentSecurityPolicy = [
   "default-src 'self'",

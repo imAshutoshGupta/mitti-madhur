@@ -46,3 +46,6 @@ yarn-error.log*
 .idea
 # local dev order store (replaced by a database at step 5)
 .data
+
+# local Claude context (not for the repo)
+CLAUDE.md

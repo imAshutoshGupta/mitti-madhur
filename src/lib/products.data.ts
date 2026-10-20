@@ -747,12 +747,6 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
   return products.find((p) => p.slug === slug) ?? null;
 }
 
-export async function getProductsByCategory(
-  category: CategorySlug,
-): Promise<Product[]> {
-  return products.filter((p) => p.category === category);
-}
-
 export async function getBestSellers(limit = 5): Promise<Product[]> {
   return products.filter((p) => p.bestSeller).slice(0, limit);
 }

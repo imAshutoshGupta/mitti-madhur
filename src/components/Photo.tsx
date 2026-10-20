@@ -3,8 +3,8 @@
 import Image from "next/image";
 import { useState } from "react";
 
-// next/image with a warm placeholder, so the layout still looks right
-// before you've added the real photos to /public/images.
+// next/image on a warm gradient. If the image fails to load it is removed and
+// the gradient stays, so a missing file never shows a broken-image icon.
 export function Photo({
   src,
   alt,

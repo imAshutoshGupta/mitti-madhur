@@ -14,13 +14,13 @@ import {
   CART_STORAGE_KEY,
   cartTotals,
   emptyCart,
+  lookupSku,
   makeCartReducer,
   maxQuantityFor,
   readStoredCart,
   resolveCart,
   writeStoredCart,
   type CartCatalogue,
-  type CartSku,
   type CartTotals,
   type RemovedCartLine,
   type ResolvedCartLine,
@@ -127,7 +127,7 @@ export function CartProvider({
   );
 
   const maxFor = useCallback(
-    (sku: string) => maxQuantityFor(catalogue[sku]),
+    (sku: string) => maxQuantityFor(lookupSku(catalogue, sku)),
     [catalogue],
   );
 
@@ -181,11 +181,6 @@ export function useCart(): CartContextValue {
   const ctx = useContext(CartContext);
   if (!ctx) throw new Error("useCart must be used inside <CartProvider>");
   return ctx;
-}
-
-/** Convenience for components that only need one SKU's live record. */
-export function useCartSku(sku: string): CartSku | undefined {
-  return useCart().catalogue[sku];
 }
 
 /** Quantity of a SKU currently in the cart, 0 when absent. */

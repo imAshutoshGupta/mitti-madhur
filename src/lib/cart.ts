@@ -21,8 +21,11 @@
 /** Hard cap per line, regardless of how deep stock is. */
 export const MAX_PER_LINE = 10;
 
-/** Bumped if the persisted shape ever changes, so old carts are discarded. */
-const STORAGE_KEY = "mm.cart.v2";
+/**
+ * Bumped if the persisted shape ever changes, so old carts are discarded.
+ * Exported so CartProvider can sync other tabs by listening for this key.
+ */
+export const CART_STORAGE_KEY = "mm.cart.v2";
 const LEGACY_STORAGE_KEYS = ["mm.cart.v1"];
 
 /** A cart older than this is forgotten rather than resurrected. */
@@ -295,7 +298,7 @@ export function readStoredCart(): CartLine[] {
       window.localStorage.removeItem(legacy);
     }
 
-    const raw = window.localStorage.getItem(STORAGE_KEY);
+    const raw = window.localStorage.getItem(CART_STORAGE_KEY);
     if (!raw) return [];
     const parsed: unknown = JSON.parse(raw);
     if (
@@ -312,7 +315,7 @@ export function readStoredCart(): CartLine[] {
     // device where the next person did not put it there.
     if (typeof savedAt !== "number" || !Number.isFinite(savedAt)) return [];
     if (Date.now() - savedAt > MAX_CART_AGE_MS) {
-      window.localStorage.removeItem(STORAGE_KEY);
+      window.localStorage.removeItem(CART_STORAGE_KEY);
       return [];
     }
 
@@ -336,11 +339,11 @@ export function writeStoredCart(lines: CartLine[]): void {
     if (lines.length === 0) {
       // Don't leave an empty record behind, and don't create one on a pristine
       // visit where the customer has touched nothing.
-      window.localStorage.removeItem(STORAGE_KEY);
+      window.localStorage.removeItem(CART_STORAGE_KEY);
       return;
     }
     window.localStorage.setItem(
-      STORAGE_KEY,
+      CART_STORAGE_KEY,
       JSON.stringify({ savedAt: Date.now(), lines }),
     );
   } catch {
@@ -348,6 +351,3 @@ export function writeStoredCart(lines: CartLine[]): void {
     // this session, which is better than breaking the page over a failed write.
   }
 }
-
-/** Exported so other tabs can be listened to by key. */
-export const CART_STORAGE_KEY = STORAGE_KEY;

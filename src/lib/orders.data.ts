@@ -23,8 +23,9 @@ import { products } from "./products.data";
  *
  * It is NOT production storage. It has no transactions, so the atomic stock
  * reservation that docs/CHECKOUT-SECURITY.md requires cannot be implemented
- * here — see the note in `createOrder`. Step 5 replaces the two functions at
- * the bottom of this file with database calls and nothing else changes.
+ * here — see the note in `createOrder`. Step 5 replaces the file store
+ * (`readAll`, `persist`, `withLock`) and `getOrderByToken` with database
+ * calls; the pages and the server action do not change.
  *
  * A serverless filesystem is read-only apart from /tmp, so this will not
  * persist on Vercel. That is fine for a pre-database build and is exactly why

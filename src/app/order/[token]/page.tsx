@@ -41,22 +41,6 @@ export async function generateMetadata({
   };
 }
 
-// ---------------------------------------------------------------------------
-// Deterministic date formatting
-// ---------------------------------------------------------------------------
-
-/** IST is UTC+5:30 year round — no daylight saving, so this is a constant. */
-/**
- * "20 October 2026", built by hand from the ISO timestamp.
- *
- * `toLocaleDateString` is deliberately avoided: its ICU data differs between
- * Node and browsers, so the server and the client can disagree on the string
- * and React reports a hydration mismatch — the same reason formatPrice groups
- * digits by hand in src/lib/format.ts.
- *
- * The epoch is shifted into IST before the UTC getters are read, so an order
- * placed at 01:00 IST shows as that day and not the previous one.
- */
 /** 9876543210 -> "+91 98765 43210"; anything unexpected is shown unchanged. */
 function formatPhone(phone: string): string {
   return /^\d{10}$/.test(phone)

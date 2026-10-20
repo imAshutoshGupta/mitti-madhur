@@ -1,5 +1,5 @@
-// Marketing copy for the homepage. Product and category data now lives in
-// ~/lib/products.ts, because it is shop data rather than page copy.
+// Marketing copy for the homepage. Product and category data lives in
+// ~/lib/products.data.ts, because it is shop data rather than page copy.
 
 export const navLinks = [
   { label: "Shop", href: "/shop" },
