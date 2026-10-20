@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { PolicyPage } from "~/components/PolicyPage";
+import { siteConfig } from "~/config/site";
 
 /** TODO(before launch): confirm windows and refund timelines, and get this reviewed. */
 export const metadata: Metadata = {
@@ -25,9 +26,11 @@ export default function ReturnsPolicyPage() {
       </ul>
       <p>
         Send a photo of the product and the packaging to{" "}
-        <a href="mailto:hello@mittimadhur.in">hello@mittimadhur.in</a> with your
-        order number. We will replace the item or refund it in full, whichever
-        you prefer. You will not pay return shipping.
+        <a href={`mailto:${siteConfig.contact.email}`}>
+          {siteConfig.contact.email}
+        </a>{" "}
+        with your order number. We will replace the item or refund it in full,
+        whichever you prefer. You will not pay return shipping.
       </p>
 
       <h2>What we cannot accept back</h2>
@@ -69,9 +72,11 @@ export default function ReturnsPolicyPage() {
 
       <h2>Contact</h2>
       <p>
-        <a href="mailto:hello@mittimadhur.in">hello@mittimadhur.in</a> ·{" "}
-        <a href="tel:+911234567890">+91 12345 67890</a>. Please quote your order
-        number; it is on your order confirmation page.
+        <a href={`mailto:${siteConfig.contact.email}`}>
+          {siteConfig.contact.email}
+        </a>{" "}
+        · <a href={siteConfig.contact.phoneHref}>{siteConfig.contact.phone}</a>.
+        Please quote your order number; it is on your order confirmation page.
       </p>
     </PolicyPage>
   );

@@ -4,12 +4,9 @@ import { useId } from "react";
 import Link from "next/link";
 import { Photo } from "~/components/Photo";
 import { useCart } from "~/components/cart/CartProvider";
+import { siteConfig } from "~/config/site";
 import { formatPrice } from "~/lib/format";
-import {
-  amountToFreeShipping,
-  FREE_SHIPPING_THRESHOLD_PAISE,
-  orderTotals,
-} from "~/lib/orders";
+import { amountToFreeShipping, orderTotals } from "~/lib/orders";
 
 /**
  * The review column on /checkout.
@@ -120,8 +117,8 @@ export function OrderSummaryPanel() {
 
       {toFreeShipping > 0 && (
         <p className="bg-cream text-ink mt-4 rounded-lg px-3 py-2 text-xs">
-          Spend {formatPrice(FREE_SHIPPING_THRESHOLD_PAISE)} or more and
-          delivery is free.
+          Spend {formatPrice(siteConfig.shipping.freeThresholdPaise)} or more
+          and delivery is free.
         </p>
       )}
 

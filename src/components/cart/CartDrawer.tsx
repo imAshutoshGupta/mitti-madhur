@@ -3,25 +3,14 @@
 import { useEffect, useId, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { AlertTriangle, ShoppingBag, X } from "lucide-react";
+import { ShoppingBag, X } from "lucide-react";
 import { motion, useReducedMotion } from "motion/react";
 import { formatPrice } from "~/lib/format";
+import { lockBodyScroll, trapTabKey } from "~/lib/modal";
 import { useCart } from "./CartProvider";
+import { CartChangeNotice } from "./CartChangeNotice";
 import { CartLineItem } from "./CartLineItem";
 import { EmptyState } from "~/components/EmptyState";
-
-/** Everything that can hold focus inside the panel. Mirrors MobileFilterSheet. */
-const FOCUSABLE =
-  'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
-
-function focusableWithin(panel: HTMLElement): HTMLElement[] {
-  return Array.from(panel.querySelectorAll<HTMLElement>(FOCUSABLE)).filter(
-    // `hidden`/`display:none` descendants report no layout boxes. The list is
-    // queried on every Tab rather than cached because removing a line, or
-    // hitting the stock cap, changes which controls exist mid-dialog.
-    (element) => element.getClientRects().length > 0,
-  );
-}
 
 /**
  * Slide-out cart, mounted once in the root layout and driven entirely by
@@ -39,16 +28,8 @@ function focusableWithin(panel: HTMLElement): HTMLElement[] {
  * polish: the panel leaves the tree the moment the cart closes.
  */
 export function CartDrawer() {
-  const {
-    lines,
-    totals,
-    hydrated,
-    isOpen,
-    closeCart,
-    lastAddedSku,
-    removed,
-    dismissNotice,
-  } = useCart();
+  const { lines, totals, hydrated, isOpen, closeCart, lastAddedSku, removed } =
+    useCart();
   const panelRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
   const openedAtPath = useRef(pathname);
@@ -111,54 +92,17 @@ export function CartDrawer() {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         closeCart();
-        return;
-      }
-      if (event.key !== "Tab") return;
-
-      // `aria-modal="true"` promises the rest of the page is inert, so Tab has
-      // to stay inside the panel: without this, focus walks out behind the
-      // scrim onto content the screen reader has been told is hidden and the
-      // scroll lock makes unreachable.
-      const panel = panelRef.current;
-      if (!panel) return;
-
-      const items = focusableWithin(panel);
-      const first = items[0];
-      const last = items[items.length - 1];
-      if (!first || !last) {
-        // Nothing tabbable inside: keep focus on the panel itself.
-        event.preventDefault();
-        panel.focus();
-        return;
-      }
-
-      const active = document.activeElement;
-      const inside = active instanceof Node && panel.contains(active);
-
-      if (event.shiftKey) {
-        if (!inside || active === first || active === panel) {
-          event.preventDefault();
-          last.focus();
-        }
-        return;
-      }
-      if (!inside || active === last) {
-        event.preventDefault();
-        first.focus();
+      } else if (event.key === "Tab" && panelRef.current) {
+        trapTabKey(event, panelRef.current);
       }
     };
     document.addEventListener("keydown", onKeyDown);
-
-    // Remember whatever the body already had so closing or unmounting never
-    // leaves the page stuck, and never clobbers a value someone else set.
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-
+    const unlockScroll = lockBodyScroll();
     panelRef.current?.focus();
 
     return () => {
       document.removeEventListener("keydown", onKeyDown);
-      document.body.style.overflow = previousOverflow;
+      unlockScroll();
       // Send focus back where it came from, but only if that element is still
       // a real, attached element — the control that opened the drawer may have
       // unmounted in the meantime (a filter change, a client navigation).
@@ -246,35 +190,7 @@ export function CartDrawer() {
         </div>
 
         <div className="flex-1 overflow-y-auto overscroll-contain px-2 py-2">
-          {removed.length > 0 && (
-            <div className="border-line bg-cream mx-2 mt-2 mb-3 rounded-xl border p-3">
-              <div className="flex gap-2">
-                <AlertTriangle
-                  className="text-accent mt-0.5 size-4 shrink-0"
-                  aria-hidden
-                />
-                <ul className="text-ink min-w-0 flex-1 space-y-1 text-xs">
-                  {removed.map((entry) => (
-                    <li key={entry.sku}>
-                      {entry.reason === "reduced"
-                        ? `We reduced ${entry.name} to ${entry.quantity} — that is the maximum per order.`
-                        : entry.reason === "out-of-stock"
-                          ? `${entry.name} is out of stock and was removed.`
-                          : `${entry.name} is no longer available and was removed.`}
-                    </li>
-                  ))}
-                </ul>
-                <button
-                  type="button"
-                  onClick={dismissNotice}
-                  className="text-muted hover:text-ink focus-visible:ring-brown grid size-10 shrink-0 place-items-center rounded-full focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
-                >
-                  <X className="size-4" aria-hidden />
-                  <span className="sr-only">Dismiss cart notice</span>
-                </button>
-              </div>
-            </div>
-          )}
+          <CartChangeNotice placement="drawer" className="mx-2 mt-2 mb-3" />
 
           {hasLines && (
             <ul className="divide-line divide-y">
@@ -322,26 +238,37 @@ export function CartDrawer() {
                 )}
               </dl>
               <p className="text-muted mt-2 text-xs">
-                Shipping and taxes calculated at checkout
+                Shipping calculated at checkout
               </p>
             </>
           )}
 
-          <div className="mt-4 grid gap-2">
+          {/* View Cart and Checkout share a row so the footer stays two rows
+              tall: on a short landscape phone a third row squeezed the line
+              list to nothing. */}
+          <div className="mt-4 grid grid-cols-2 gap-2">
             {hasLines && (
-              <Link
-                href="/cart"
-                onClick={closeCart}
-                className="bg-brown hover:bg-brown-dark focus-visible:ring-brown inline-flex min-h-10 items-center justify-center rounded-full px-6 py-3 text-sm font-semibold text-white focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
-              >
-                View Cart
-              </Link>
+              <>
+                <Link
+                  href="/cart"
+                  onClick={closeCart}
+                  className="border-line text-ink hover:bg-cream focus-visible:ring-brown inline-flex min-h-10 items-center justify-center rounded-full border bg-white px-4 py-3 text-sm font-semibold focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+                >
+                  View Cart
+                </Link>
+                <Link
+                  href="/checkout"
+                  onClick={closeCart}
+                  className="bg-brown hover:bg-brown-dark focus-visible:ring-brown inline-flex min-h-10 items-center justify-center rounded-full px-4 py-3 text-sm font-semibold text-white focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+                >
+                  Checkout
+                </Link>
+              </>
             )}
-            {/* TODO(step 3): add the Checkout CTA once /checkout exists. */}
             <button
               type="button"
               onClick={closeCart}
-              className="border-line text-ink hover:bg-cream focus-visible:ring-brown inline-flex min-h-10 items-center justify-center rounded-full border bg-white px-6 py-3 text-sm font-semibold focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+              className="border-line text-ink hover:bg-cream focus-visible:ring-brown col-span-2 inline-flex min-h-10 items-center justify-center rounded-full border bg-white px-6 py-3 text-sm font-semibold focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
             >
               Continue Shopping
             </button>

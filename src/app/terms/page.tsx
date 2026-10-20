@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { PolicyPage } from "~/components/PolicyPage";
+import { siteConfig } from "~/config/site";
 
 /** TODO(before launch): legal review, and confirm the governing jurisdiction. */
 export const metadata: Metadata = {
@@ -79,14 +80,16 @@ export default function TermsPage() {
 
       <h2>Governing law</h2>
       <p>
-        These terms are governed by the laws of India, and the courts at
-        Kolhapur, Maharashtra have jurisdiction over any dispute.
+        These terms are governed by the laws of India, and the courts at{" "}
+        {siteConfig.legal.jurisdiction} have jurisdiction over any dispute.
       </p>
 
       <h2>Contact</h2>
       <p>
-        <a href="mailto:hello@mittimadhur.in">hello@mittimadhur.in</a> ·{" "}
-        <a href="tel:+911234567890">+91 12345 67890</a>
+        <a href={`mailto:${siteConfig.contact.email}`}>
+          {siteConfig.contact.email}
+        </a>{" "}
+        · <a href={siteConfig.contact.phoneHref}>{siteConfig.contact.phone}</a>
       </p>
     </PolicyPage>
   );

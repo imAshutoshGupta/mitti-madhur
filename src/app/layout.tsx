@@ -6,10 +6,11 @@ import { Navbar } from "~/components/Navbar";
 import { Footer } from "~/components/Footer";
 import { CartProvider } from "~/components/cart/CartProvider";
 import { CartDrawer } from "~/components/cart/CartDrawer";
+import { siteConfig } from "~/config/site";
 import { getCartCatalogue } from "~/lib/products.data";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://mittimadhur.in"),
+  metadataBase: new URL(siteConfig.url),
   title: {
     default: "MittiMadhur | Pure Jaggery for a Healthier Tomorrow",
     // Page titles render as "Shop Jaggery | MittiMadhur".

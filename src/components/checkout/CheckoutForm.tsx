@@ -1,50 +1,29 @@
 "use client";
 
-import {
-  useCallback,
-  useEffect,
-  useId,
-  useRef,
-  useState,
-  type ReactNode,
-} from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { AlertTriangle, ShoppingBag, X } from "lucide-react";
+import { ShoppingBag } from "lucide-react";
 import { type ZodError } from "zod";
 import { EmptyState } from "~/components/EmptyState";
+import { CartChangeNotice } from "~/components/cart/CartChangeNotice";
 import { useCart } from "~/components/cart/CartProvider";
+import {
+  FIELD_ORDER,
+  StateSelect,
+  TextField,
+  type FieldBinding,
+  type FieldName,
+} from "~/components/checkout/CheckoutFields";
 import { OrderSummaryPanel } from "~/components/checkout/OrderSummaryPanel";
 import { placeOrderAction } from "~/app/checkout/actions";
+import { siteConfig } from "~/config/site";
 import {
-  INDIAN_STATES,
   shippingAddressSchema,
   type CheckoutFieldErrors,
 } from "~/lib/checkout";
 import { orderTotals } from "~/lib/orders";
 import { formatPrice } from "~/lib/format";
 
-/**
- * Source order of the address fields.
- *
- * Doubles as the error-precedence order: after a failed submit, focus goes to
- * the first field in THIS list that has an error, which is the first one a
- * reader meets on the page. Sorting by whatever order Zod happened to report
- * issues in would occasionally throw focus backwards.
- */
-const FIELD_ORDER = [
-  "fullName",
-  "phone",
-  "email",
-  "line1",
-  "line2",
-  "landmark",
-  "city",
-  "state",
-  "pincode",
-  "notes",
-] as const;
-
-type FieldName = (typeof FIELD_ORDER)[number];
 type FormValues = Record<FieldName, string>;
 
 const EMPTY_VALUES: FormValues = {
@@ -119,8 +98,7 @@ function toPayload(values: FormValues): Record<FieldName, string | undefined> {
  */
 export function CheckoutForm() {
   const router = useRouter();
-  const { lines, totals, hydrated, clearCart, removed, dismissNotice } =
-    useCart();
+  const { lines, totals, hydrated, clearCart, removed } = useCart();
   const uid = useId();
 
   const [values, setValues] = useState<FormValues>(EMPTY_VALUES);
@@ -249,7 +227,7 @@ export function CheckoutForm() {
       );
     } catch {
       fail({
-        form: "We could not confirm whether your order went through. Please do not submit again — call us on +91 12345 67890 and we will check for you.",
+        form: `We could not confirm whether your order went through. Please do not submit again — call us on ${siteConfig.contact.phone} and we will check for you.`,
       });
       return;
     }
@@ -340,40 +318,20 @@ export function CheckoutForm() {
 
   const { totalInPaise } = orderTotals(totals.subtotalInPaise);
 
-  const removalNotice =
-    removed.length > 0 ? (
-      <div className="border-line bg-cream mb-6 rounded-xl border p-4">
-        <div className="flex gap-3">
-          <AlertTriangle
-            className="text-accent mt-0.5 size-5 shrink-0"
-            aria-hidden
-          />
-          <ul className="text-ink min-w-0 flex-1 space-y-1 text-sm">
-            {removed.map((entry) => (
-              <li key={entry.sku}>
-                {entry.reason === "reduced"
-                  ? `We reduced ${entry.name} to ${entry.quantity} — that is the maximum per order.`
-                  : entry.reason === "out-of-stock"
-                    ? `${entry.name} sold out and was removed from this order.`
-                    : `${entry.name} is no longer available and was removed from this order.`}
-              </li>
-            ))}
-          </ul>
-          <button
-            type="button"
-            onClick={dismissNotice}
-            className="text-muted hover:text-ink focus-visible:ring-brown grid size-10 shrink-0 place-items-center rounded-full focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
-          >
-            <X className="size-4" aria-hidden />
-            <span className="sr-only">Dismiss notice</span>
-          </button>
-        </div>
-      </div>
-    ) : null;
+  // What every field needs from the form; each field below adds only what is
+  // specific to it.
+  const fieldProps = (name: FieldName): FieldBinding => ({
+    id: `${uid}-${name}`,
+    name,
+    value: values[name],
+    error: errors[name],
+    onChange: setValue,
+    register: registerField,
+  });
 
   return (
     <div className="mt-8">
-      {removalNotice}
+      <CartChangeNotice placement="checkout" className="mb-6" />
       {/* Form first in source order, so mobile stacks details above summary. */}
       <div className="grid items-start gap-8 lg:grid-cols-[1fr_380px]">
         <form
@@ -409,27 +367,17 @@ export function CheckoutForm() {
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="sm:col-span-2">
                 <TextField
-                  id={`${uid}-fullName`}
-                  name="fullName"
+                  {...fieldProps("fullName")}
                   label="Full name"
-                  value={values.fullName}
-                  error={errors.fullName}
-                  onChange={setValue}
-                  register={registerField}
                   autoComplete="name"
                   maxLength={80}
                 />
               </div>
 
               <TextField
-                id={`${uid}-phone`}
-                name="phone"
+                {...fieldProps("phone")}
                 label="Mobile number"
                 hint="10-digit Indian mobile. We only use it for delivery updates."
-                value={values.phone}
-                error={errors.phone}
-                onChange={setValue}
-                register={registerField}
                 type="tel"
                 inputMode="numeric"
                 autoComplete="tel"
@@ -437,14 +385,9 @@ export function CheckoutForm() {
               />
 
               <TextField
-                id={`${uid}-email`}
-                name="email"
+                {...fieldProps("email")}
                 label="Email"
                 hint="So we can reach you about this order. We do not send confirmation emails yet."
-                value={values.email}
-                error={errors.email}
-                onChange={setValue}
-                register={registerField}
                 type="email"
                 inputMode="email"
                 autoComplete="email"
@@ -461,13 +404,8 @@ export function CheckoutForm() {
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="sm:col-span-2">
                 <TextField
-                  id={`${uid}-line1`}
-                  name="line1"
+                  {...fieldProps("line1")}
                   label="House / flat and street"
-                  value={values.line1}
-                  error={errors.line1}
-                  onChange={setValue}
-                  register={registerField}
                   autoComplete="address-line1"
                   maxLength={120}
                 />
@@ -475,14 +413,9 @@ export function CheckoutForm() {
 
               <div className="sm:col-span-2">
                 <TextField
-                  id={`${uid}-line2`}
-                  name="line2"
+                  {...fieldProps("line2")}
                   label="Area / locality"
                   optional
-                  value={values.line2}
-                  error={errors.line2}
-                  onChange={setValue}
-                  register={registerField}
                   autoComplete="address-line2"
                   maxLength={120}
                 />
@@ -490,48 +423,27 @@ export function CheckoutForm() {
 
               <div className="sm:col-span-2">
                 <TextField
-                  id={`${uid}-landmark`}
-                  name="landmark"
+                  {...fieldProps("landmark")}
                   label="Landmark"
                   optional
                   hint="Something nearby that helps the rider find you."
-                  value={values.landmark}
-                  error={errors.landmark}
-                  onChange={setValue}
-                  register={registerField}
                   autoComplete="address-line3"
                   maxLength={80}
                 />
               </div>
 
               <TextField
-                id={`${uid}-city`}
-                name="city"
+                {...fieldProps("city")}
                 label="City"
-                value={values.city}
-                error={errors.city}
-                onChange={setValue}
-                register={registerField}
                 autoComplete="address-level2"
                 maxLength={60}
               />
 
-              <StateSelect
-                id={`${uid}-state`}
-                value={values.state}
-                error={errors.state}
-                onChange={setValue}
-                register={registerField}
-              />
+              <StateSelect {...fieldProps("state")} />
 
               <TextField
-                id={`${uid}-pincode`}
-                name="pincode"
+                {...fieldProps("pincode")}
                 label="PIN code"
-                value={values.pincode}
-                error={errors.pincode}
-                onChange={setValue}
-                register={registerField}
                 inputMode="numeric"
                 autoComplete="postal-code"
                 maxLength={6}
@@ -539,15 +451,10 @@ export function CheckoutForm() {
 
               <div className="sm:col-span-2">
                 <TextField
-                  id={`${uid}-notes`}
-                  name="notes"
+                  {...fieldProps("notes")}
                   label="Delivery notes"
                   optional
                   hint="Gate code, preferred time, anything else we should know."
-                  value={values.notes}
-                  error={errors.notes}
-                  onChange={setValue}
-                  register={registerField}
                   multiline
                   maxLength={300}
                 />
@@ -614,209 +521,6 @@ export function CheckoutForm() {
       </div>
     </div>
   );
-}
-
-// ---------------------------------------------------------------------------
-// Fields
-// ---------------------------------------------------------------------------
-
-/**
- * One labelled control plus its hint and inline error.
- *
- * The label is a real `<label htmlFor>` every time. Placeholders-as-labels
- * disappear the moment someone starts typing, which is exactly when a form
- * this long needs them most, and they are invisible to most autofill.
- */
-function TextField({
-  id,
-  name,
-  label,
-  value,
-  error,
-  hint,
-  optional = false,
-  type = "text",
-  inputMode,
-  autoComplete,
-  maxLength,
-  multiline = false,
-  onChange,
-  register,
-}: {
-  id: string;
-  name: FieldName;
-  label: string;
-  value: string;
-  error?: string;
-  hint?: string;
-  optional?: boolean;
-  type?: "text" | "tel" | "email";
-  inputMode?: "numeric" | "email";
-  autoComplete?: string;
-  maxLength?: number;
-  multiline?: boolean;
-  onChange: (name: FieldName, value: string) => void;
-  register: (name: FieldName, el: HTMLElement | null) => void;
-}) {
-  const describedBy = describedByFor(id, error, hint);
-  const invalid = error !== undefined;
-
-  return (
-    <FieldShell
-      id={id}
-      label={label}
-      optional={optional}
-      hint={hint}
-      error={error}
-    >
-      {multiline ? (
-        <textarea
-          id={id}
-          name={name}
-          rows={3}
-          value={value}
-          maxLength={maxLength}
-          required={!optional}
-          aria-invalid={invalid || undefined}
-          aria-describedby={describedBy}
-          onChange={(event) => onChange(name, event.target.value)}
-          ref={(el) => {
-            register(name, el);
-          }}
-          className={controlClass(invalid)}
-        />
-      ) : (
-        <input
-          id={id}
-          name={name}
-          type={type}
-          value={value}
-          inputMode={inputMode}
-          autoComplete={autoComplete}
-          maxLength={maxLength}
-          required={!optional}
-          aria-invalid={invalid || undefined}
-          aria-describedby={describedBy}
-          onChange={(event) => onChange(name, event.target.value)}
-          ref={(el) => {
-            register(name, el);
-          }}
-          className={controlClass(invalid)}
-        />
-      )}
-    </FieldShell>
-  );
-}
-
-function StateSelect({
-  id,
-  value,
-  error,
-  onChange,
-  register,
-}: {
-  id: string;
-  value: string;
-  error?: string;
-  onChange: (name: FieldName, value: string) => void;
-  register: (name: FieldName, el: HTMLElement | null) => void;
-}) {
-  const describedBy = describedByFor(id, error, undefined);
-  const invalid = error !== undefined;
-
-  return (
-    <FieldShell id={id} label="State" error={error}>
-      <select
-        id={id}
-        name="state"
-        value={value}
-        required
-        autoComplete="address-level1"
-        aria-invalid={invalid || undefined}
-        aria-describedby={describedBy}
-        onChange={(event) => onChange("state", event.target.value)}
-        ref={(el) => {
-          register("state", el);
-        }}
-        className={controlClass(invalid)}
-      >
-        {/* Empty rather than pre-selecting a state: a wrong address that was
-            never typed is worse than one the customer has to choose. */}
-        <option value="">Choose your state</option>
-        {INDIAN_STATES.map((state) => (
-          <option key={state} value={state}>
-            {state}
-          </option>
-        ))}
-      </select>
-    </FieldShell>
-  );
-}
-
-function FieldShell({
-  id,
-  label,
-  optional = false,
-  hint,
-  error,
-  children,
-}: {
-  id: string;
-  label: string;
-  optional?: boolean;
-  hint?: string;
-  error?: string;
-  children: ReactNode;
-}) {
-  return (
-    <div className="min-w-0">
-      <label htmlFor={id} className="text-ink block text-sm font-medium">
-        {label}
-        {optional && (
-          <span className="text-muted font-normal"> (optional)</span>
-        )}
-      </label>
-
-      <div className="mt-1.5">{children}</div>
-
-      {hint !== undefined && error === undefined && (
-        <p id={`${id}-hint`} className="text-muted mt-1 text-xs">
-          {hint}
-        </p>
-      )}
-      {error !== undefined && (
-        <p id={`${id}-error`} className="text-accent mt-1 text-xs font-medium">
-          {error}
-        </p>
-      )}
-    </div>
-  );
-}
-
-/**
- * The hint is dropped from the description once there is an error: a screen
- * reader reads `aria-describedby` in order, and burying "Enter a valid
- * 10-digit Indian mobile number" behind a sentence of advice the customer has
- * already failed to follow helps nobody.
- */
-function describedByFor(
-  id: string,
-  error: string | undefined,
-  hint: string | undefined,
-): string | undefined {
-  if (error !== undefined) return `${id}-error`;
-  if (hint !== undefined) return `${id}-hint`;
-  return undefined;
-}
-
-function controlClass(invalid: boolean): string {
-  // Exactly ONE border-colour utility is emitted. Emitting both and relying on
-  // class order does not work — CSS source order decides, `border-line` wins,
-  // and an invalid field renders pixel-identical to a valid one with the error
-  // text as its only signal.
-  return `text-ink placeholder:text-muted focus-visible:ring-brown block min-h-11 w-full rounded-lg border bg-white px-3 py-2.5 text-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none ${
-    invalid ? "border-accent" : "border-line"
-  }`;
 }
 
 // ---------------------------------------------------------------------------

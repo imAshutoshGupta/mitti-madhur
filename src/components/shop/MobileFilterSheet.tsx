@@ -9,20 +9,10 @@ import {
   type ReactNode,
 } from "react";
 import { SlidersHorizontal, X } from "lucide-react";
-
-/** Everything that can hold focus inside the panel. */
-const FOCUSABLE =
-  'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+import { lockBodyScroll, trapTabKey } from "~/lib/modal";
 
 /** Tailwind's `lg`. The trigger and the sheet are both `lg:hidden`. */
 const LG_QUERY = "(min-width: 1024px)";
-
-function focusableWithin(panel: HTMLElement): HTMLElement[] {
-  return Array.from(panel.querySelectorAll<HTMLElement>(FOCUSABLE)).filter(
-    // `hidden`/`display:none` descendants report no layout boxes.
-    (element) => element.getClientRects().length > 0,
-  );
-}
 
 /**
  * Bottom sheet that holds the shop filters below the `lg` breakpoint.
@@ -57,54 +47,17 @@ export function MobileFilterSheet({
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         close();
-        return;
-      }
-      if (event.key !== "Tab") return;
-
-      // `aria-modal="true"` promises the rest of the page is inert, so Tab has
-      // to be kept inside the panel: without this, focus walks out behind the
-      // scrim onto content the screen reader has been told is hidden and that
-      // the body scroll lock makes unreachable.
-      const panel = panelRef.current;
-      if (!panel) return;
-
-      const items = focusableWithin(panel);
-      const first = items[0];
-      const last = items[items.length - 1];
-      if (!first || !last) {
-        // Nothing tabbable inside: keep focus on the panel itself.
-        event.preventDefault();
-        panel.focus();
-        return;
-      }
-
-      const active = document.activeElement;
-      const inside = active instanceof Node && panel.contains(active);
-
-      if (event.shiftKey) {
-        if (!inside || active === first || active === panel) {
-          event.preventDefault();
-          last.focus();
-        }
-        return;
-      }
-      if (!inside || active === last) {
-        event.preventDefault();
-        first.focus();
+      } else if (event.key === "Tab" && panelRef.current) {
+        trapTabKey(event, panelRef.current);
       }
     };
     document.addEventListener("keydown", onKeyDown);
-
-    // Remember whatever the body already had so unmounting or closing never
-    // leaves the page stuck, and never clobbers a value someone else set.
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-
+    const unlockScroll = lockBodyScroll();
     panelRef.current?.focus();
 
     return () => {
       document.removeEventListener("keydown", onKeyDown);
-      document.body.style.overflow = previousOverflow;
+      unlockScroll();
     };
   }, [open, close]);
 

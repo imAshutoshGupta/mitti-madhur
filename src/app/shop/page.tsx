@@ -5,7 +5,8 @@ import { EmptyState } from "~/components/EmptyState";
 import { ProductCard } from "~/components/ProductCard";
 import { MobileFilterSheet } from "~/components/shop/MobileFilterSheet";
 import { ShopFilters } from "~/components/shop/ShopFilters";
-import { ResultCountAnnouncer, ShopSort } from "~/components/shop/ShopSort";
+import { ResultCountAnnouncer } from "~/components/shop/ResultCountAnnouncer";
+import { ShopSort } from "~/components/shop/ShopSort";
 import {
   isCategorySlug,
   isSortOption,

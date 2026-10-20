@@ -8,6 +8,7 @@ import { SectionHeading } from "~/components/SectionHeading";
 import { ProductBuyBox } from "~/components/product/ProductBuyBox";
 import { ProductDetailsTabs } from "~/components/product/ProductDetailsTabs";
 import { ProductGallery } from "~/components/product/ProductGallery";
+import { siteConfig } from "~/config/site";
 import { paiseToRupees, toJsonLd } from "~/lib/format";
 import { type Product } from "~/lib/products";
 import {
@@ -17,8 +18,6 @@ import {
   getRelatedProducts,
 } from "~/lib/products.data";
 import { shopHref } from "~/lib/shop-url";
-
-const SITE_URL = "https://mittimadhur.in";
 
 /**
  * Only claims that are true of the site as it stands today, and that the
@@ -95,7 +94,7 @@ function buildJsonLd(product: Product) {
     "@type": "Product",
     name: product.name,
     description: product.description,
-    image: product.images.map((src) => `${SITE_URL}${src}`),
+    image: product.images.map((src) => new URL(src, siteConfig.url).href),
     sku: product.variants[0].sku,
     brand: { "@type": "Brand", name: "MittiMadhur" },
     category: categories.find((c) => c.slug === product.category)?.name,
@@ -110,7 +109,7 @@ function buildJsonLd(product: Product) {
       "@type": "Offer",
       sku: variant.sku,
       name: `${product.name} — ${variant.label}`,
-      url: `${SITE_URL}/shop/${product.slug}`,
+      url: new URL(`/shop/${product.slug}`, siteConfig.url).href,
       priceCurrency: "INR",
       price: paiseToRupees(variant.priceInPaise).toFixed(2),
       availability:

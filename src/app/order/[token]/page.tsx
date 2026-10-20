@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { CircleCheck, Mail, Phone } from "lucide-react";
 import { Breadcrumbs } from "~/components/Breadcrumbs";
 import { Photo } from "~/components/Photo";
+import { siteConfig } from "~/config/site";
 import { formatIndianDate, formatPrice } from "~/lib/format";
 import { getOrderByToken } from "~/lib/orders.data";
 import { ORDER_STATUS_LABEL, type Order } from "~/lib/orders";
@@ -19,11 +20,6 @@ import { ORDER_STATUS_LABEL, type Order } from "~/lib/orders";
  * below is noindex on every branch.
  */
 export const dynamic = "force-dynamic";
-
-/** Matches the Get in touch block in src/components/Footer.tsx. */
-const SUPPORT_EMAIL = "hello@mittimadhur.in";
-const SUPPORT_PHONE = "+91 12345 67890";
-const SUPPORT_PHONE_HREF = "tel:+911234567890";
 
 export async function generateMetadata({
   params,
@@ -184,10 +180,10 @@ export default async function OrderConfirmationPage({
                   aria-hidden
                 />
                 <a
-                  href={`mailto:${SUPPORT_EMAIL}`}
+                  href={`mailto:${siteConfig.contact.email}`}
                   className="text-brown hover:text-brown-dark focus-visible:ring-brown rounded break-all underline-offset-4 hover:underline focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
                 >
-                  {SUPPORT_EMAIL}
+                  {siteConfig.contact.email}
                 </a>
               </li>
               <li className="flex items-start gap-3">
@@ -196,10 +192,10 @@ export default async function OrderConfirmationPage({
                   aria-hidden
                 />
                 <a
-                  href={SUPPORT_PHONE_HREF}
+                  href={siteConfig.contact.phoneHref}
                   className="text-brown hover:text-brown-dark focus-visible:ring-brown rounded break-words underline-offset-4 hover:underline focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
                 >
-                  {SUPPORT_PHONE}
+                  {siteConfig.contact.phone}
                 </a>
               </li>
             </ul>

@@ -1,5 +1,6 @@
 // Marketing copy for the homepage. Product and category data lives in
 // ~/lib/products.data.ts, because it is shop data rather than page copy.
+// Contact details, URLs and shipping rates live in ~/config/site.ts.
 
 export const navLinks = [
   { label: "Shop", href: "/shop" },

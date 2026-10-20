@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { PolicyPage } from "~/components/PolicyPage";
+import { siteConfig } from "~/config/site";
 
 /**
  * TODO(before launch): have this reviewed against the DPDP Act 2023 and name a
@@ -69,8 +70,10 @@ export default function PrivacyPolicyPage() {
       <p>
         You can ask us what we hold about you, ask us to correct it, or ask us
         to delete it. Email{" "}
-        <a href="mailto:hello@mittimadhur.in">hello@mittimadhur.in</a> and we
-        will respond within 30 days.
+        <a href={`mailto:${siteConfig.contact.email}`}>
+          {siteConfig.contact.email}
+        </a>{" "}
+        and we will respond within 30 days.
       </p>
 
       <h2>Security</h2>
@@ -89,9 +92,11 @@ export default function PrivacyPolicyPage() {
 
       <h2>Contact</h2>
       <p>
-        MittiMadhur, Kolhapur, Maharashtra, India ·{" "}
-        <a href="mailto:hello@mittimadhur.in">hello@mittimadhur.in</a> ·{" "}
-        <a href="tel:+911234567890">+91 12345 67890</a>
+        MittiMadhur, {siteConfig.contact.location} ·{" "}
+        <a href={`mailto:${siteConfig.contact.email}`}>
+          {siteConfig.contact.email}
+        </a>{" "}
+        · <a href={siteConfig.contact.phoneHref}>{siteConfig.contact.phone}</a>
       </p>
     </PolicyPage>
   );

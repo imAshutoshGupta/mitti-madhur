@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Leaf, Mail, MapPin, Phone } from "lucide-react";
+import { siteConfig } from "~/config/site";
 import { categories } from "~/lib/products.data";
 import { shopHref } from "~/lib/shop-url";
 import { Newsletter } from "./Newsletter";
@@ -52,7 +53,7 @@ export function Footer() {
               who still make it the traditional way.
             </p>
             <a
-              href="https://instagram.com"
+              href={siteConfig.social.instagram}
               target="_blank"
               rel="noopener noreferrer"
               aria-label="MittiMadhur on Instagram"
@@ -114,21 +115,24 @@ export function Footer() {
               <li className="flex items-start gap-3">
                 <Mail className="mt-0.5 size-4 shrink-0" aria-hidden />
                 <a
-                  href="mailto:hello@mittimadhur.in"
+                  href={`mailto:${siteConfig.contact.email}`}
                   className="hover:text-white"
                 >
-                  hello@mittimadhur.in
+                  {siteConfig.contact.email}
                 </a>
               </li>
               <li className="flex items-start gap-3">
                 <Phone className="mt-0.5 size-4 shrink-0" aria-hidden />
-                <a href="tel:+911234567890" className="hover:text-white">
-                  +91 12345 67890
+                <a
+                  href={siteConfig.contact.phoneHref}
+                  className="hover:text-white"
+                >
+                  {siteConfig.contact.phone}
                 </a>
               </li>
               <li className="flex items-start gap-3">
                 <MapPin className="mt-0.5 size-4 shrink-0" aria-hidden />
-                <span>Kolhapur, Maharashtra, India</span>
+                <span>{siteConfig.contact.location}</span>
               </li>
             </ul>
           </div>

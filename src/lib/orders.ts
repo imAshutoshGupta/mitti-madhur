@@ -6,28 +6,20 @@
 // All money is integer paise. See docs/CHECKOUT-SECURITY.md for the checks the
 // server must perform before any of this can take real payments.
 
+import { siteConfig } from "~/config/site";
 import { type ShippingAddress } from "./checkout";
 
-/**
- * Shipping rates.
- *
- * PLACEHOLDER BUSINESS RULE — confirm with the client before launch. These are
- * the only two numbers that define delivery pricing, deliberately kept here so
- * changing them is a one-line edit rather than a hunt through components.
- */
-export const FREE_SHIPPING_THRESHOLD_PAISE = 49_900; // ₹499
-export const FLAT_SHIPPING_PAISE = 4_900; // ₹49
+// The rates themselves live in src/config/site.ts.
+const { flatRatePaise, freeThresholdPaise } = siteConfig.shipping;
 
 export function shippingForSubtotal(subtotalInPaise: number): number {
   if (subtotalInPaise <= 0) return 0;
-  return subtotalInPaise >= FREE_SHIPPING_THRESHOLD_PAISE
-    ? 0
-    : FLAT_SHIPPING_PAISE;
+  return subtotalInPaise >= freeThresholdPaise ? 0 : flatRatePaise;
 }
 
 /** How much more is needed to qualify for free delivery, 0 once qualified. */
 export function amountToFreeShipping(subtotalInPaise: number): number {
-  return Math.max(0, FREE_SHIPPING_THRESHOLD_PAISE - subtotalInPaise);
+  return Math.max(0, freeThresholdPaise - subtotalInPaise);
 }
 
 /**

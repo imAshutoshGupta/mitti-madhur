@@ -1,15 +1,12 @@
 import type { Metadata } from "next";
 import { PolicyPage } from "~/components/PolicyPage";
+import { siteConfig } from "~/config/site";
 import { formatPrice } from "~/lib/format";
-import {
-  FLAT_SHIPPING_PAISE,
-  FREE_SHIPPING_THRESHOLD_PAISE,
-} from "~/lib/orders";
 
 /**
  * TODO(before launch): these figures must be confirmed by the business and the
  * whole page reviewed by someone qualified. The rates are IMPORTED from
- * ~/lib/orders.ts rather than restated, so the published policy cannot drift
+ * ~/config/site.ts rather than restated, so the published policy cannot drift
  * away from what checkout actually charges.
  */
 export const metadata: Metadata = {
@@ -28,12 +25,13 @@ export default function ShippingPolicyPage() {
       <h2>Delivery charges</h2>
       <ul>
         <li>
-          <strong>{formatPrice(FLAT_SHIPPING_PAISE)}</strong> flat delivery
-          charge on orders under {formatPrice(FREE_SHIPPING_THRESHOLD_PAISE)}.
+          <strong>{formatPrice(siteConfig.shipping.flatRatePaise)}</strong> flat
+          delivery charge on orders under{" "}
+          {formatPrice(siteConfig.shipping.freeThresholdPaise)}.
         </li>
         <li>
           <strong>Free delivery</strong> on orders of{" "}
-          {formatPrice(FREE_SHIPPING_THRESHOLD_PAISE)} and above.
+          {formatPrice(siteConfig.shipping.freeThresholdPaise)} and above.
         </li>
         <li>
           Charges are calculated at checkout and shown before you place the
@@ -81,8 +79,11 @@ export default function ShippingPolicyPage() {
         Your order confirmation page shows your order number. Until online order
         tracking is available, our team will call you to confirm your order and
         can tell you where it is. Contact us at{" "}
-        <a href="mailto:hello@mittimadhur.in">hello@mittimadhur.in</a> or{" "}
-        <a href="tel:+911234567890">+91 12345 67890</a> with your order number.
+        <a href={`mailto:${siteConfig.contact.email}`}>
+          {siteConfig.contact.email}
+        </a>{" "}
+        or <a href={siteConfig.contact.phoneHref}>{siteConfig.contact.phone}</a>{" "}
+        with your order number.
       </p>
     </PolicyPage>
   );

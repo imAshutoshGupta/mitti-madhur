@@ -2,8 +2,9 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { AlertTriangle, ShoppingBag, X } from "lucide-react";
+import { ShoppingBag } from "lucide-react";
 import { EmptyState } from "~/components/EmptyState";
+import { CartChangeNotice } from "~/components/cart/CartChangeNotice";
 import { CartLineItem } from "~/components/cart/CartLineItem";
 import { useCart } from "~/components/cart/CartProvider";
 import { formatPrice } from "~/lib/format";
@@ -21,7 +22,7 @@ import { formatPrice } from "~/lib/format";
  * region that unmounts along with the thing that changed announces nothing.
  */
 export function CartPageContents() {
-  const { lines, totals, hydrated, removed, dismissNotice } = useCart();
+  const { lines, totals, hydrated } = useCart();
   const [announcement, setAnnouncement] = useState("");
 
   const previousCount = useRef<number | null>(null);
@@ -63,36 +64,7 @@ export function CartPageContents() {
 
   if (!hydrated) return <CartSkeleton />;
 
-  const notice =
-    removed.length > 0 ? (
-      <div className="border-line bg-cream mb-4 rounded-xl border p-4">
-        <div className="flex gap-3">
-          <AlertTriangle
-            className="text-accent mt-0.5 size-5 shrink-0"
-            aria-hidden
-          />
-          <ul className="text-ink min-w-0 flex-1 space-y-1 text-sm">
-            {removed.map((entry) => (
-              <li key={entry.sku}>
-                {entry.reason === "reduced"
-                  ? `We reduced ${entry.name} to ${entry.quantity} — that is the maximum per order.`
-                  : entry.reason === "out-of-stock"
-                    ? `${entry.name} is out of stock and was removed from your cart.`
-                    : `${entry.name} is no longer available and was removed from your cart.`}
-              </li>
-            ))}
-          </ul>
-          <button
-            type="button"
-            onClick={dismissNotice}
-            className="text-muted hover:text-ink focus-visible:ring-brown grid size-10 shrink-0 place-items-center rounded-full focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
-          >
-            <X className="size-4" aria-hidden />
-            <span className="sr-only">Dismiss cart notice</span>
-          </button>
-        </div>
-      </div>
-    ) : null;
+  const notice = <CartChangeNotice placement="cart" className="mb-4" />;
 
   if (lineCount === 0) {
     return (
@@ -290,11 +262,7 @@ function OrderSummary({
           </div>
         )}
 
-        {/*
-          No figure here on purpose. There is no rate card and no free-shipping
-          threshold yet, and inventing either would be a promise the checkout
-          cannot keep.
-        */}
+        {/* The figure and the final total are shown on /checkout. */}
         <div className="flex items-baseline justify-between gap-3">
           <dt className="text-muted">Shipping</dt>
           <dd className="text-muted">Calculated at checkout</dd>
@@ -303,8 +271,8 @@ function OrderSummary({
         <div className="border-line border-t pt-3">
           <div className="flex items-baseline justify-between gap-3">
             {/*
-              Labelled "Subtotal", not "Total": shipping and tax are still
-              unknown, so this is not the amount that will be charged.
+              Labelled "Subtotal", not "Total": shipping is not included yet,
+              so this is not the amount that will be charged.
             */}
             <dt className="text-ink text-base font-semibold">Subtotal</dt>
             <dd className="text-ink text-base font-semibold tabular-nums">
@@ -312,36 +280,21 @@ function OrderSummary({
             </dd>
           </div>
           <p className="text-muted mt-1 text-xs">
-            Shipping and taxes calculated at checkout.
+            Shipping calculated at checkout.
           </p>
         </div>
       </dl>
 
-      {/*
-        TODO(step 3): enable and link to /checkout.
-
-        `aria-disabled` rather than `disabled`: a `disabled` button leaves the
-        tab order entirely, so its `aria-describedby` explanation could never
-        be reached and a keyboard user tabbed straight past checkout without
-        ever learning it exists. It is also de-emphasised to an outline, so the
-        control that actually works — Continue Shopping — is the prominent one.
-      */}
-      <button
-        type="button"
-        aria-disabled="true"
-        aria-describedby="checkout-pending-note"
-        onClick={(event) => event.preventDefault()}
-        className="border-line text-muted focus-visible:ring-brown mt-5 w-full cursor-not-allowed rounded-full border bg-white px-6 py-3 text-sm font-semibold focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+      <Link
+        href="/checkout"
+        className="bg-brown hover:bg-brown-dark focus-visible:ring-brown mt-5 flex min-h-10 w-full items-center justify-center rounded-full px-6 py-3 text-sm font-semibold text-white focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
       >
         Proceed to Checkout
-      </button>
-      <p id="checkout-pending-note" className="text-muted mt-2 text-xs">
-        Checkout is arriving in the next update.
-      </p>
+      </Link>
 
       <Link
         href="/shop"
-        className="bg-brown hover:bg-brown-dark focus-visible:ring-brown mt-4 flex min-h-10 w-full items-center justify-center rounded-full px-6 py-3 text-sm font-semibold text-white focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+        className="border-line text-ink hover:bg-cream focus-visible:ring-brown mt-3 flex min-h-10 w-full items-center justify-center rounded-full border bg-white px-6 py-3 text-sm font-semibold focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
       >
         Continue Shopping
       </Link>
@@ -411,7 +364,7 @@ function CartSkeleton() {
             </div>
           </div>
           <div className="bg-line/60 mt-5 h-12 w-full animate-pulse rounded-full" />
-          <div className="bg-line/60 mt-4 h-12 w-full animate-pulse rounded-full" />
+          <div className="bg-line/60 mt-3 h-12 w-full animate-pulse rounded-full" />
         </div>
       </div>
 

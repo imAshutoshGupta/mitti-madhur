@@ -1,13 +1,12 @@
 import Link from "next/link";
 import { type Metadata } from "next";
+import { siteConfig } from "~/config/site";
 
 export const metadata: Metadata = {
   title: "Order not found",
   // Same rule as the order page itself: this segment is never indexed.
   robots: { index: false, follow: false },
 };
-
-const SUPPORT_EMAIL = "hello@mittimadhur.in";
 
 /**
  * Shown for any token the lookup does not resolve.
@@ -33,10 +32,10 @@ export default function OrderNotFound() {
         <p className="text-muted mt-3 max-w-md text-sm leading-relaxed">
           If you have your order number, email{" "}
           <a
-            href={`mailto:${SUPPORT_EMAIL}`}
+            href={`mailto:${siteConfig.contact.email}`}
             className="text-brown hover:text-brown-dark focus-visible:ring-brown rounded break-all underline-offset-4 hover:underline focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
           >
-            {SUPPORT_EMAIL}
+            {siteConfig.contact.email}
           </a>{" "}
           and we will look it up for you.
         </p>
@@ -49,7 +48,7 @@ export default function OrderNotFound() {
             Browse the shop
           </Link>
           <a
-            href={`mailto:${SUPPORT_EMAIL}`}
+            href={`mailto:${siteConfig.contact.email}`}
             className="border-line text-ink hover:border-brown hover:text-brown focus-visible:ring-brown inline-flex min-h-11 items-center justify-center rounded-full border bg-white px-6 text-sm font-semibold focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
           >
             Email us
